@@ -144,8 +144,8 @@ function luckfox_pico_ultra_pin_diagram_file() {
          -             -             -      3V3 |       | 5V
  PWM7_M0 - I2C2_M0_SCL - UART3_M0_TX - GPIO1_A0 |       | 5V
  PWM4_M0 - I2C2_M0_SDA - UART3_M0_RX - GPIO1_A1 |       | GND
- PWM3_M1 -             - UART4_M0_RX - GPIO1_B0 |       | GPIO1_B2 - UART2_M1_TX
-         -             -             -      GND |       | GPIO1_B3 - UART2_M1_RX
+ PWM3_M1 -             - UART4_M0_RX - GPIO1_B0 |       | GPIO1_B2 - FIQtty_TX
+         -             -             -      GND |       | GPIO1_B3 - FIQtty_RX
  PWM7_M1 -             - UART4_M0_TX - GPIO1_B1 |       | GPIO1_C6 -             -            - PWM10_M1
  PWM3_M2 -             - UART3_M1_TX - GPIO1_D0 |       | GND
  PWM10_M2-             - UART3_M1_RX - GPIO1_D1 |       | GPIO2_A7 - UART0_M1_CTS- I2C3_M0_SDA- PWM4_M1
@@ -201,6 +201,34 @@ function luckfox_pico_pi_pin_diagram_file() {
 EOF
 }
 
+function luckfox_pico_zero_pin_diagram_file() {
+	cat >$LUCKFOX_PIN_DIAGRAM_FILE <<EOF
+                                             Luckfox_Pico_Zero
+                                                + - + - +
+         -             -             -      3V3 |       | 5V
+         - I2C2_M0_SCL - UART3_M0_TX - GPIO1_A0 |       | 5V
+ PWM4_M0 - I2C2_M0_SDA - UART3_M0_RX - GPIO1_A1 |       | GND
+ PWM3_M1 -             - UART4_M0_RX - GPIO1_B0 |       | GPIO1_B2 - FIQtty_TX
+         -             -             -      GND |       | GPIO1_B3 - FIQtty_RX
+         -             - UART4_M0_TX - GPIO1_B1 |       | GPIO1_C6 -             -             - PWM10_M1
+ PWM3_M2 -             - UART3_M1_TX - GPIO1_D0 |       | GND
+ PWM10_M2-             - UART3_M1_RX - GPIO1_D1 |       | GPIO2_A7 - UART0_M1_CTS- I2C3_M0_SDA - PWM4_M1
+         -             -             -      3V3 |       | GPIO2_A6 - UART0_M1_RTS- I2C3_M0_SCL - PWM2_M1
+ PWM5_M2 - I2C4_M1_SCL - SPI0_M0_MOSI- GPIO1_C2 |       | GND
+ PWM6_M2 - I2C4_M1_SDA - SPI0_M0_MISO- GPIO1_C3 |       | GPIO1_D3 -             -             - PWM11_M2
+ PWM4_M2 -             - SPI0_M0_CLK - GPIO1_C1 |       | GPIO1_C0 - SPI0_M0_CS0 -             - PWM2_M2
+                                            GND |       | GPIO1_D2 - SPI0_M0_CS1 -             - PWM0_M1
+ PWM6_M1 - I2C1_M1_SDA - UART0_M1_TX - GPIO2_B1 |       | GPIO2_B0 - UART0_M1_RX - I2C2_M1_SCL - PWM5_M1
+         - I2C3_M2_SDA - UART5_M2_RTS- GPIO3_D2 |       | GND      -             -             -
+         - I2C3_M2_SCL - UART5_M2_CTS- GPIO3_D1 |       | GPIO1_C5 - UART4_M1_TX -             - PWM9_M1
+ PWM8_M1 -             - UART4_M1_RX - GPIO1_C4 |       | GND      -             -             -
+ PWM2_M0 -             - UART0_M0_TX - GPIO0_A1 |       | GPIO1_C7 -             -             - PWM11_M1
+         -             - UART0_M0_RX - GPIO0_A0 |       | GPIO0_A3 -             -             -
+         -             -             -      GND |       | GPIO0_A4 -             -             - PWM1_M0
+                                                + - + - +
+EOF
+}
+
 ################################################################
 # ------------------------ Initialize --------------------------
 ################################################################
@@ -242,7 +270,7 @@ function luckfox_config_init() {
 	if [ ! -f $LUCKFOX_PIN_DIAGRAM_FILE ]; then
 		if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Plus" ]; then
 			luckfox_pico_plus_pin_diagram_file
-		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			luckfox_pico_pro_max_pin_diagram_file
 		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico" ]; then
 			luckfox_pico_pin_diagram_file
@@ -252,6 +280,8 @@ function luckfox_config_init() {
 			luckfox_pico_ultra_pin_diagram_file
 		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pi" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pi W" ]; then
 			luckfox_pico_pi_pin_diagram_file
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Zero" ]; then
+			luckfox_pico_zero_pin_diagram_file
 		fi
 	fi
 
@@ -343,15 +373,15 @@ function luckfox_load_cfg() {
 	fi
 
 	# CSI ( Priority is lower than RGB )
-	value=$(luckfox_get_pin_cfg "CSI_ENABLE")
-	if [ -z "$value" ]; then
-		if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra W" ]; then
-			luckfox_set_pin_mark "I2C4_M1_SCL" 1
-			luckfox_set_pin_mark "I2C4_M1_SDA" 1
-			luckfox_set_pin_mark "I2C4_M0_SCL" 1
-			luckfox_set_pin_mark "I2C4_M0_SDA" 1
-		fi
-	fi
+	# value=$(luckfox_get_pin_cfg "CSI_ENABLE")
+	# if [ -z "$value" ]; then
+	# 	if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra W" ]; then
+	# 		luckfox_set_pin_mark "I2C4_M1_SCL" 1
+	# 		luckfox_set_pin_mark "I2C4_M1_SDA" 1
+	# 		luckfox_set_pin_mark "I2C4_M0_SCL" 1
+	# 		luckfox_set_pin_mark "I2C4_M0_SDA" 1
+	# 	fi
+	# fi
 
 	# FBTFT
 	value=$(luckfox_get_pin_cfg "FBTFT_ENABLE")
@@ -365,7 +395,7 @@ function luckfox_load_cfg() {
 			luckfox_set_pin_mark "GPIO1_C3" "$value"
 			luckfox_set_pin_mark "GPIO0_A4" "$value"
 			luckfox_fbtft_app 1 "sitronix,st7789v"
-		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			luckfox_set_pin_mark "GPIO2_B1" "$value"
 			luckfox_set_pin_mark "GPIO1_C0" "$value"
 			luckfox_set_pin_mark "GPIO1_C1" "$value"
@@ -378,7 +408,7 @@ function luckfox_load_cfg() {
 		fi
 	elif [ "$value" == 0 ]; then
 		if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Plus" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico" ] ||
-			[ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+			[ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			echo "Reset fbtft pins"
 			#luckfox_fbtft_app 0
 		fi
@@ -1108,7 +1138,7 @@ function luckfox_compatible_Pico_LCD() {
 			luckfox_gpio_app 3 a 5 up
 			luckfox_gpio_app 3 a 2 up
 
-		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			luckfox_uart_app 0 1 1
 			luckfox_i2c_app 0 4 0
 
@@ -1213,7 +1243,7 @@ function luckfox_compatible_Pico_ResTouch_LCD() {
 			luckfox_uart_app 0 5 0
 			luckfox_i2c_app 0 0 2
 			luckfox_result_handle $LF_OK
-		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			luckfox_uart_app 0 1 1
 			luckfox_i2c_app 0 4 0
 			luckfox_i2c_app 0 3 0
@@ -1280,7 +1310,7 @@ function luckfox_compatible_Pico_OLED() {
 			luckfox_uart_app 0 5 0
 			luckfox_gpio_app 1 d 1 up
 			luckfox_gpio_app 3 a 7 up
-		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			luckfox_uart_app 0 1 1
 			luckfox_gpio_app 1 d 1 up
 			luckfox_gpio_app 2 a 5 up
@@ -1350,7 +1380,7 @@ function luckfox_compatible_app() {
 		compatible_group=(Pico_ePaper Pico_UPS_B OLED_Module DHT11)
 	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Plus" ] && [ "$LUCKFOX_CHIP_MEDIA_CLASS" == "spi_nand" ]; then
 		compatible_group=(Pico_LCD Pico_ePaper Pico_UPS_B Pico_ResTouch_LCD OLED_Module Pico_OLED DHT11)
-	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 		compatible_group=(Pico_LCD Pico_ePaper Pico_UPS_B Pico_ResTouch_LCD OLED_Module Pico_OLED DHT11)
 	fi
 
@@ -1384,25 +1414,6 @@ function hex_add() {
 	local sum_hex=$(printf "%X" $((dec1 + dec2)))
 
 	echo "$sum_hex"
-}
-
-################################################################
-# @fu hex_shift
-#
-# @param hex 		  -
-#		 shift_amount -
-#
-# @return  The hexadecimal number after shifting hex by shift_amount.
-################################################################
-function hex_shift() {
-	local hex=$1
-	local shift_amount=$2
-
-	local dec=$(printf "%d" 0x$hex)
-	local shift=$((shift_amount * 2))
-	local shifted=$((dec << shift))
-
-	printf "%X\n" $shifted
 }
 
 ################################################################
@@ -1686,13 +1697,10 @@ function luckfox_check_i2c() {
 			csi_status=$(luckfox_get_pin_cfg "CSI_ENABLE")
 			# process default status
 			if [ -z "$csi_status" ]; then
-				# CSI I2C is not enabled on Ultra models by default
-				if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra W" ]; then
-					"$csi_status" = 0
-				else
-					"$csi_status" = 1
-				fi
+				echo "set csi_status = 1"
+				csi_status=1
 			fi
+			echo "csi_status = $csi_status"
 
 			if [ "$csi_status" == 1 ]; then
 				luckfox_result_handle "$LF_ERR" "CSI is enable,Can't config I2C4"
@@ -1811,7 +1819,7 @@ function luckfox_check_spi() {
 
 	# Set GPIO
 	if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Plus" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico" ] ||
-		[ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		[ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 		fbtft_status=$(luckfox_get_pin_cfg "FBTFT_ENABLE")
 		spi0m0_status=$(luckfox_get_pin_cfg "SPI0_M0_STATUS")
 		if [ "$spi_mode" == 0 ] && [ "$spi_main" == 0 ]; then
@@ -2044,6 +2052,7 @@ function luckfox_usb_app() {
 function luckfox_csi_app() {
 	#region
 	local action="$1"
+	local unite="$2"
 	# update fdt
 	luckfox_update_fdt
 
@@ -2057,6 +2066,12 @@ function luckfox_csi_app() {
 		local csi_action=disbaled
 	fi
 
+	if [ "$unite" == 1 ]; then
+		local unite_state=1
+	else
+		local unite_state=0
+	fi
+
 	if [ "$action" == 1 ]; then
 		local i2c_content="
 /dts-v1/;
@@ -2064,6 +2079,10 @@ function luckfox_csi_app() {
 &{/i2c@ff470000}{
         status=\"$csi_action\";
         pinctrl-0 = <$i2c_pinctrl_addr>;
+};
+
+&{/rkisp@ffa00000}{
+		rockchip,unite = <$unite_state>;
 };
 "
 	else
@@ -2082,6 +2101,8 @@ function luckfox_csi_app() {
 	# update cfg
 	luckfox_set_pin_cfg "CSI_ENABLE" "$action"
 	luckfox_set_pin_parameter "CSI_ENABLE" "$action"
+	luckfox_set_pin_cfg "CSI_UNITE_ENABLE" "$action"
+	luckfox_set_pin_parameter "CSI_UNITE_ENABLE" "$action"
 
 	luckfox_set_pin_mark "I2C4_M0_SCL" 0
 	luckfox_set_pin_mark "I2C4_M0_SDA" 0
@@ -2436,7 +2457,7 @@ function luckfox_fbtft_app() {
 	if [ "$action" == 1 ]; then
 		if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Plus" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico" ]; then
 			luckfox_check_pin_diagram "GPIO1_A2" "GPIO1_C0" "GPIO1_C1" "GPIO1_C2" "GPIO1_C3" "GPIO0_A4"
-		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 			luckfox_check_pin_diagram "GPIO2_B1" "GPIO1_C0" "GPIO1_C1" "GPIO1_C2" "GPIO1_C3" "GPIO2_B0"
 		else
 			luckfox_result_handle "$LF_ERR" "This Luckfox-Pico Model does not support FBTFT setting!"
@@ -2526,7 +2547,7 @@ function luckfox_fbtft_app() {
 		luckfox_set_pin_mark "GPIO1_C2" "$action"
 		luckfox_set_pin_mark "GPIO1_C3" "$action"
 		luckfox_set_pin_mark "GPIO0_A4" "$action"
-	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ]; then
+	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Max" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pro Max" ]; then
 		luckfox_set_pin_mark "GPIO2_B1" "$action"
 		luckfox_set_pin_mark "GPIO1_C0" "$action"
 		luckfox_set_pin_mark "GPIO1_C1" "$action"
@@ -2861,12 +2882,9 @@ function luckfox_result_handle() {
 }
 
 ################################################################
-# @fu luckfox_result_handle
+# @fu luckfox_pico_show_pin_diagram
 #
-# @brief 1. Display a message in the GUI.
-#
-# @param status - Status of messages
-#		 log    - Prepare the message to be printed
+# @brief 1. Display pin diagram in the GUI.
 #
 # @return none
 ################################################################
@@ -2889,47 +2907,72 @@ function luckfox_show_menu() {
 				--menu "Choose an option" 80 50 6 \
 				1 "Advanced Options" \
 				2 "4G Module" \
-				3 "About Luckfox" \
+				3 "Backup" \
+				4 "About Luckfox" \
 				2>&1 >/dev/tty)
 
 			case $option in
 			1) luckfox_advanced_options ;;
 			2) luckfox_4G ;;
-			3) luckfox_about ;;
+			3) luckfox_backup ;;
+			4) luckfox_about ;;
 			*) luckfox_exit ;;
 			esac
 		done
 	# Only support Luckfox Pico Ultra /Luckfox Pico Ultra W
-	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra W" ]; then
+	elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra W" ] ||
+	[ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Zero" ]; then
 		while true; do
 			option=$(dialog --title "$LUCKFOX_CHIP_MODEL Config" \
 				--menu "Choose an option" 80 50 6 \
 				1 "Advanced Options" \
-				2 "About Luckfox" \
-				2>&1 >/dev/tty)
-
-			case $option in
-			1) luckfox_advanced_options ;;
-			2) luckfox_about ;;
-			*) luckfox_exit ;;
-			esac
-		done
-	else
-		while true; do
-			option=$(dialog --title "$LUCKFOX_CHIP_MODEL Config" \
-				--menu "Choose an option" 80 50 6 \
-				1 "Compatible Devices" \
-				2 "Advanced Options" \
+				2 "Backup" \
 				3 "About Luckfox" \
 				2>&1 >/dev/tty)
 
 			case $option in
-			1) luckfox_compatible_devices ;;
-			2) luckfox_advanced_options ;;
+			1) luckfox_advanced_options ;;
+			2) luckfox_backup ;;
 			3) luckfox_about ;;
 			*) luckfox_exit ;;
 			esac
 		done
+	else
+		if [ "$LUCKFOX_CHIP_MEDIA_CLASS" == "sdmmc" ]; then
+			while true; do
+				option=$(dialog --title "$LUCKFOX_CHIP_MODEL Config" \
+					--menu "Choose an option" 80 50 6 \
+					1 "Compatible Devices" \
+					2 "Advanced Options" \
+					3 "Backup" \
+					4 "About Luckfox" \
+					2>&1 >/dev/tty)
+
+				case $option in
+				1) luckfox_compatible_devices ;;
+				2) luckfox_advanced_options ;;
+				3) luckfox_backup ;;
+				4) luckfox_about ;;
+				*) luckfox_exit ;;
+				esac
+			done
+		else
+			while true; do
+				option=$(dialog --title "$LUCKFOX_CHIP_MODEL Config" \
+					--menu "Choose an option" 80 50 6 \
+					1 "Compatible Devices" \
+					2 "Advanced Options" \
+					3 "About Luckfox" \
+					2>&1 >/dev/tty)
+
+				case $option in
+				1) luckfox_compatible_devices ;;
+				2) luckfox_advanced_options ;;
+				3) luckfox_about ;;
+				*) luckfox_exit ;;
+				esac
+			done
+		fi
 	fi
 }
 
@@ -3043,6 +3086,39 @@ function luckfox_advanced_options() {
 			*) luckfox_show_menu ;;
 			esac
 		done
+	fi
+}
+
+function luckfox_backup() {
+	option=$(dialog --title "Advanced Options" \
+		--menu "Choose an option" 80 50 6 \
+		0 "rootfs" \
+		2>&1 >/dev/tty)
+
+	if [ "$option" == "0" ]; then
+		if [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pi" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Pi W" ] || \
+		 [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Zero" ]; then
+			media_class=$(dialog --menu "Select Backup Image Location" 80 50 6 \
+				0 "local" \
+				1 "usb_disk" \
+				2 "sd_card" \
+				2>&1 >/dev/tty)
+		elif [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra" ] || [ "$LUCKFOX_CHIP_MODEL" == "Luckfox Pico Ultra W" ]; then
+			media_class=$(dialog --menu "Select Backup Image Location" 80 50 6 \
+				0 "local" \
+				1 "usb_disk" \
+				2>&1 >/dev/tty)
+		else
+			if [ "$LUCKFOX_CHIP_MEDIA_CLASS" == "sdmmc" ]; then
+				media_class=$(dialog --menu "Select Backup Image Location" 80 50 6 \
+					0 "local" \
+					1 "usb_disk" \
+					2>&1 >/dev/tty)
+			fi
+		fi
+		luckfox_rootfs_BACKUP "$media_class"
+	else
+		luckfox_show_menu
 	fi
 }
 
@@ -3275,6 +3351,7 @@ function luckfox_USB() {
 
 function luckfox_CSI() {
 	local csi_enable
+	local unite_enable
 	csi_enable=$(dialog --menu "CSI Enable Config" 10 40 2 \
 		0 "disable" \
 		1 "enable" \
@@ -3282,7 +3359,18 @@ function luckfox_CSI() {
 	if [ -z "$csi_enable" ]; then
 		luckfox_advanced_options
 	fi
-	luckfox_csi_app "$csi_enable"
+
+	if [ "$csi_enable" == 1 ]; then
+		unite_enable=$(dialog --menu "CSI Unite Mode Config(for 3840x2160 input)" 10 40 2 \
+			0 "disable" \
+			1 "enable" \
+			2>&1 >/dev/tty)
+		if [ -z "$unite" ]; then
+			luckfox_advanced_options
+		fi
+	fi
+
+	luckfox_csi_app "$csi_enable" "$unite_enable"
 	dialog --msgbox "CSI Effective after restart" 10 30
 	echo "Set CSI enable status : $csi_enable." >>"$LUCKFOX_CHANGE_TXT"
 	luckfox_advanced_options
@@ -3488,23 +3576,157 @@ function luckfox_4G() {
 				1 "CTCC(ctnet)" \
 				2 "CMCC(cmnet)" \
 				3 "CUCC(3gwap)" \
+				4 "custom" \
 				2>&1 >/dev/tty)
 
-			case $card_type in
-			1) apn="ctnet" ;;
-			2) apn="cmnet" ;;
-			3) apn="3gwap" ;;
-			esac
+			if [ "$card_type" == 4 ]; then
+				apn=$(dialog --inputbox "4G Module PPP Mode APN:" 10 30 2>&1 >/dev/tty)
+				if [ -z "apn" ]; then
+					dialog --msgbox "Invalid inputs" 10 30
+					luckfox_advanced_options
+				fi
+			else
+				case $card_type in
+				1) apn="ctnet" ;;
+				2) apn="cmnet" ;;
+				3) apn="3gwap" ;;
+				esac
+			fi
 		fi
-
 	fi
 
 	luckfox_4g_app "$module_4g_enable" "$mode" "$apn"
 }
 
 ################################################################
+# ------------------------ Backup GUI --------------------------
+################################################################
+function luckfox_rootfs_BACKUP() {
+	local media_class="$1"
+
+	ROOT_FS_TYPE=$(df -T / | tail -1 | awk '{print $2}')
+	if [[ "$ROOT_FS_TYPE" != "ext4" ]]; then
+		luckfox_result_handle "$LF_ERR" "Error: Root filesystem is not ext4 (found: $ROOT_FS_TYPE)"
+	fi
+
+	if ! command -v rsync &>/dev/null; then
+		luckfox_result_handle "$LF_ERR" "The rsync is not installed"
+	fi
+
+	if [ "$media_class" == 0 ]; then
+		AVAILABLE_SPACE=$(df -k /mnt | tail -1 | awk '{print $4}')
+		IMAGE_NAME="/mnt/backup_rootfs.img"
+		MOUNT_POINT="/mnt/backup_img"
+	elif [ "$media_class" == 1 ]; then
+		if ! mount | grep "/mnt/udisk"; then
+			luckfox_result_handle "$LF_ERR" "USB disk is not mounted"
+		fi
+		AVAILABLE_SPACE=$(df -k /mnt/udisk | tail -1 | awk '{print $4}')
+		IMAGE_NAME="/mnt/udisk/backup_rootfs.img"
+		MOUNT_POINT="/mnt/udisk/backup_img"
+	elif [ "$media_class" == 2 ]; then
+		if ! mount | grep "/mnt/sdcard"; then
+			luckfox_result_handle "$LF_ERR" "SD card is not mounted"
+		fi
+		AVAILABLE_SPACE=$(df -k /mnt/sdcard | tail -1 | awk '{print $4}')
+		IMAGE_NAME="/mnt/sdcard/backup_rootfs.img"
+		MOUNT_POINT="/mnt/sdcard/backup_img"
+	else
+		luckfox_show_menu
+	fi
+
+	used_kb=$(df -k / | tail -1 | awk '{print $3}')
+	REQUIRED_SPACE=$(awk -v size_kb="$used_kb" 'BEGIN { printf("%d", (size_kb * 2.4 / 1024) + 0.999) }')
+
+	if [ -z "$AVAILABLE_SPACE" ]; then
+		AVAILABLE_SPACE=0
+	fi
+
+	if [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE" ]; then
+		luckfox_result_handle "$LF_ERR" "Not enough space on $media_class (required: ${REQUIRED_SPACE}MB, available: ${AVAILABLE_SPACE}MB)"
+	fi
+
+	LOG_FILE="/tmp/backup_rootfs.log"
+
+	if [ -f "$IMAGE_NAME" ]; then
+		rm -f "$IMAGE_NAME"
+	fi
+
+	if mountpoint -q "$MOUNT_POINT"; then
+		umount "$MOUNT_POINT"
+	fi
+
+	if [ -d "$MOUNT_POINT" ]; then
+		rm -rf "$MOUNT_POINT"
+	fi
+	mkdir -p "$MOUNT_POINT"
+
+	{
+		echo "XXX"
+		echo 10
+		echo "Starting backup process..."
+		echo "XXX"
+
+		echo "Calculating used disk space..." >>"$LOG_FILE"
+		used_kb=$(df -k / | tail -1 | awk '{print $3}')
+		IMAGE_SIZE_MB=$(awk -v size_kb="$used_kb" 'BEGIN { printf("%d", (size_kb * 1.2 / 1024) + 0.999) }')
+
+		echo "XXX"
+		echo 40
+		echo "Creating ext4 image ($IMAGE_SIZE_MB MB)..."
+		echo "XXX"
+		dd if=/dev/zero of="$IMAGE_NAME" bs=1M count=$IMAGE_SIZE_MB >>"$LOG_FILE" 2>&1
+		mkfs.ext4 -F "$IMAGE_NAME" >>"$LOG_FILE" 2>&1
+
+		echo "XXX"
+		echo 60
+		echo "Mounting image..."
+		echo "XXX"
+		mount -o loop "$IMAGE_NAME" "$MOUNT_POINT" >>"$LOG_FILE" 2>&1
+
+		echo "XXX"
+		echo 80
+		echo "Copying rootfs with rsync..."
+		echo "XXX"
+		rsync -aX --exclude={"/oem","/userdata","/sys","/mnt","/tmp","/proc"} / "$MOUNT_POINT" >>"$LOG_FILE" 2>&1
+
+		mkdir -p  "$MOUNT_POINT/sys" "$MOUNT_POINT/mnt" "$MOUNT_POINT/tmp" "$MOUNT_POINT/proc" "$MOUNT_POINT/userdata" "$MOUNT_POINT/oem"
+
+		echo "XXX"
+		echo 100
+		echo "Finalizing..."
+		echo "XXX"
+		umount "$MOUNT_POINT" >>"$LOG_FILE" 2>&1
+	} | dialog --title "Backup in Progress" --gauge "Preparing backup..." 10 60 0
+
+	dialog --title "Backup Succeeded" --msgbox "The image is saved at $IMAGE_NAME" 10 60
+	luckfox_show_menu
+}
+
+################################################################
+# @fu hex_shift
+#
+# @param hex 		  -
+#		 shift_amount -
+#
+# @return  The hexadecimal number after shifting hex by shift_amount.
+################################################################
+function hex_shift() {
+	local hex=$1
+	local shift_amount=$2
+
+	local dec=$(printf "%d" 0x$hex)
+	local shift=$((shift_amount * 2))
+	local shifted=$((dec << shift))
+
+	printf "%X\n" $shifted
+}
+
+################################################################
 # --------------------------- Run ------------------------------
 ################################################################
+
+echo 0 >/proc/sys/kernel/printk
 if [ "$1" == "load" ]; then
 	LF_GUI_ENABLE=0
 	if [ -f $LUCKFOX_PIN_DIAGRAM_FILE ]; then
@@ -3528,20 +3750,18 @@ elif [ "$1" == "rgb_switch" ]; then
 			echo "****************************************************"
 			echo "***Switch the RGB screen resolution to 720 x 720.***"
 			echo "****************************************************"
-			luckfox_csi_app 1
 			luckfox_rgb_app 1 "reset" "30000000" \
 				"720" "720" \
 				"44" "46" \
 				"18" "16" \
 				"2" "2" \
 				"0" "0" \
-				"0" "1"
+				"0" "0"
 		elif [ "$(luckfox_get_pin_cfg "RGB_HACTIVE")" == "720" ]; then
 			# 720 -> 480
 			echo "****************************************************"
 			echo "***Switch the RGB screen resolution to 480 x 480.***"
 			echo "****************************************************"
-			luckfox_csi_app 1
 			luckfox_rgb_app 1 "reset" "16500000" \
 				"480" "480" \
 				"10" "50" \
@@ -3553,7 +3773,6 @@ elif [ "$1" == "rgb_switch" ]; then
 			echo "****************************************************"
 			echo "***Switch the RGB screen resolution to 480 x 480.***"
 			echo "****************************************************"
-			luckfox_csi_app 1
 			luckfox_rgb_app 1 "reset" "16500000" \
 				"480" "480" \
 				"10" "50" \
@@ -3565,8 +3784,37 @@ elif [ "$1" == "rgb_switch" ]; then
 	else
 		luckfox_result_handle "$RK_ERR" "This Luckchip Pico Model does not support RGB switch."
 	fi
+elif [ "$1" == "get_csi_unite" ]; then
+	LF_GUI_ENABLE=0
+	luckfox_config_init
+	luckfox_update_fdt
+
+	csi_unite_status=$(grep -A 9 "rkisp@ffa00000 {" $LUCKFOX_FDT_DUMP_TXT | grep 'rockchip,unite' | awk '{print $3}' | sed 's/[<>;]//g')
+	if [ -z "$csi_unite_status" ]; then
+		csi_unite_status=0
+	fi
+
+	echo $(($csi_unite_status))
+elif [ "$1" == "set_csi_unite" ]; then
+	LF_GUI_ENABLE=0
+	luckfox_config_init
+
+	csi_status=$(luckfox_get_pin_mark "CSI_ENABLE")
+	if [ -z "$csi_status" ]; then
+		csi_status=1
+	fi
+
+	#csi_unite_status=$(luckfox_get_pin_mark "CSI_UNITE_ENABLE")
+	csi_unite_status="$2"
+	if [ -z "csi_unite_status" ]; then
+		csi_unite_status=0
+	fi
+
+	luckfox_csi_app "$csi_status" "$csi_unite_status"
 elif [ -z "$1" ]; then
 	LF_GUI_ENABLE=1
 	luckfox_config_init
 	luckfox_show_menu
 fi
+echo "7 4 1 7" >/proc/sys/kernel/printk
+

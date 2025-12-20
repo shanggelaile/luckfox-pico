@@ -44,6 +44,15 @@ if [ $? -eq 0 ]; then
 	insmod bcmdhd.ko
 fi
 
+#rtl8723bs
+cat /sys/bus/sdio/devices/*/uevent | grep "024C:B723"
+if [ $? -eq 0 ]; then
+	insmod libarc4.ko
+	insmod cfg80211.ko
+	insmod mac80211.ko
+	insmod r8723bs.ko
+fi
+
 #rtl8723ds
 cat /sys/bus/sdio/devices/*/uevent | grep "024C:D723"
 if [ $? -eq 0 ]; then
@@ -98,7 +107,8 @@ if [ $? -eq 0 ]; then
 fi
 
 #aic8800
-if [ -n "$(cat /proc/device-tree/model | grep "W")" ]; then
+if [ -n "$(cat /proc/device-tree/model | grep "W")" ] || \
+[ -n "$(cat /sys/bus/sdio/devices/*/uevent | grep "C8A1\:C18D")" ]; then
 	insmod cfg80211.ko
 	insmod libarc4.ko
 	insmod ctr.ko
